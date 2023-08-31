@@ -27,14 +27,31 @@ export class ObjectType<DataType = any, E = ErrorMessageType> extends MixedType<
       if (type.objectTypeSchemaSpec && typeof value === 'object') {
         const checkResultObject: any = {};
         let hasError = false;
-        Object.entries(type.objectTypeSchemaSpec).forEach(([k, v]) => {
-          const checkResult = check(value[k], value, v);
-          if (checkResult?.hasError) {
-            hasError = true;
-          }
-          checkResultObject[k] = checkResult;
-        });
-
+        try {
+          Object.entries(type.objectTypeSchemaSpec).forEach(([k, v]) => {
+            const checkResult = check(value[k], value, v);
+            if (checkResult?.hasError) {
+              hasError = true;
+            }
+            checkResultObject[k] = checkResult;
+          });
+        } catch (e) {
+            if (e?.message?.includes('null')) {
+                console.log('##Exception Object Type no required(null) - SchemaTyped: ###ObjectType.js');
+                console.log(e?.message);
+                console.log('##END Exception Object Type(null)')
+                return { hasError: false };
+            } else if (e?.message?.includes('undefined')) {
+                console.log('##Exception Object Type(undefined-spec) - Maybe you are assigning a model directly without its "spec" property - SchemaTyped: ###ObjectType.js');
+                console.log(e?.message)
+                console.log(value);
+                console.log('##END Exception Object Type(undefined-spec)')
+            } else {
+                console.log('##Exception Object Type - SchemaTyped: ###ObjectType.js');
+                console.log(e);
+                console.log('##END Exception Object Type')
+            }
+        }
         return { hasError, object: checkResultObject };
       }
 
